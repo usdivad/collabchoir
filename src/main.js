@@ -41,7 +41,14 @@
 						synth.pause();
 						console.log("TIMER DONE");
 						console.log(note_arr);
-						return;
+
+						//scoring!
+						var max_score = melody.length * 12; //12 being the range, max that can be subtracted
+						var your_score = evaluate_score(melody, note_arr);
+						var score_str = ((your_score/max_score)*100).toFixed(2) + "%";
+						display_io.html(score_str);
+						console.log("Your score is " + score_str);
+						return note_arr;
 					}
 					//Timer is still going
 					else {
@@ -240,7 +247,25 @@
 	//GAME BRAIN evaluation
 	//given_arr in vex (a/4) format, user_arr in midi pitches already
 	function evaluate_score(given_arr, user_arr) {
+		//format
 		var given_formatted = [];
+		for (var i in given_arr) {
+			console.log("given_arr " + given_arr[i]);
+			var note_formatted = vex_to_midi(given_arr[i]);
+			given_formatted.push(note_formatted);
+		}
+
+		//compare
+		var user_score = 0;
+		for (var i in user_arr) {
+			var note_user = user_arr[i];
+			var note_given = given_formatted[i];
+			var diff = Math.abs(note_user-note_given);
+			user_score += 12-diff;
+		}
+
+		return user_score;
+
 	}
 
 	//-------------
