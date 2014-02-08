@@ -375,4 +375,49 @@
 	}
 
 	window.scroll(0,1);
+
+
+
+	//Playback after the fact (integrate into the Angular files)
+	//var playback_on = false;
+	var playing = false;
+	var playback_osc;
+	var playback_env;
+	var playback_synth;
+	var playback_i = 0;
+	$("body").click(function() {
+		if (timer_done) { //should be playback_on
+			console.log("foo");
+			playback_osc = T("square");
+			playback_env = T("adsr", {a:10, d:100, s:1, r:500});
+			playback_synth = T("OscGen", {osc:osc, env:env, mul:4, freq:880}).play();
+			//playback_timer.start();
+
+			if (playing) {
+				playback_timer.stop();
+				playing = false;
+			}
+			else {
+				playback_timer.start();
+				playing = true;
+				console.log("start");
+			}
+		}
+	});
+	var playback_timer = T("interval", {interval:500}, function(count) {
+			var velocity = 100;
+			
+			var note = note_arr[playback_i];
+			playback_synth.noteOn(note, velocity);
+			
+			console.log("asdf");
+
+			if (playback_i < note_arr.length) {
+				playback_i += 1;
+			}
+			else {
+				playback_i = 0;
+				console.log("reset");
+			}
+		});
 })();
