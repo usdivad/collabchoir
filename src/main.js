@@ -30,7 +30,7 @@
 				//timer!
 				timer_started = true;
 				var interval = 100;;
-				var count = 5;
+				var count = 10; //#s
 				var counter = setInterval(timer, interval);
 				function timer() {
 					if (count <= 0.1) {
@@ -194,6 +194,35 @@
 	}
 
 	/**ENGRAVING**/
+	//Engrave given melody
+	var melody = ["a/3", "e/4", "c/4", "a/3"];
+
+	var melo_cv = $(".given_melody canvas")[0];
+	var melo_renderer = new Vex.Flow.Renderer(melo_cv, Vex.Flow.Renderer.Backends.CANVAS);
+	var melo_ctx = melo_renderer.getContext();
+	var melo_stave = new Vex.Flow.Stave(10, 0, 500);
+	var melo_notes = [];
+	melo_stave.addClef("treble").setContext(melo_ctx).draw();
+
+
+	for (var i in melody) {
+		melo_notes.push(new Vex.Flow.StaveNote({keys:[melody[i]], duration:"q"}));
+	}
+
+	  function create_melo_voice() {
+	    return new Vex.Flow.Voice({
+	      num_beats: melo_notes.length,
+	      beat_value: 4,
+	      resolution: Vex.Flow.RESOLUTION
+	    });
+	  }
+
+	var melo_voice = create_melo_voice().addTickables(melo_notes);
+	var formatter = new Vex.Flow.Formatter().joinVoices([melo_voice]).format([melo_voice], 500);
+	melo_voice.draw(melo_ctx, melo_stave);
+
+
+
 	//from tuner
 	//realtime update is done by Tuner()
 	const NOTEMAX=5; //1 just shows 1, 20 shows 20 at a time
@@ -202,7 +231,7 @@
 	var cv = $('.engraving canvas')[0];
 	var renderer = new Vex.Flow.Renderer(cv, Vex.Flow.Renderer.Backends.CANVAS);
 	var g_ctx = renderer.getContext();
-	var stave = new Vex.Flow.Stave(10, 0, 800);
+	var stave = new Vex.Flow.Stave(10, 0, 500);
 	stave.addClef("treble").setContext(g_ctx).draw();
 
 	//notes
@@ -251,7 +280,7 @@
 		c.clearRect(0, 0, cv.width, cv.height);
 		stave.setContext(g_ctx).draw(); //bad oop
 		voice.addTickables(notes);
-		var formatter = new Vex.Flow.Formatter().joinVoices([voice]).format([voice], 800);
+		var formatter = new Vex.Flow.Formatter().joinVoices([voice]).format([voice], 500);
 		voice.draw(c, stave);
 	}
 
