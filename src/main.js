@@ -10,7 +10,8 @@
 	var mvmt = 60;
 	var display_meter = $("#meter");
 	var display_io = $("#io");
-	var synth_on = false;
+	var timer_started = false;
+	var timer_done = false;
 	var prev_mvmt = 60;
 	var note_arr = [];
 
@@ -19,9 +20,34 @@
 	var gamma_max = 100;
 
 	//LISTENERS
-	window.addEventListener("deviceorientation", handle_orientation, true);
 	$("#io").bind("mousedown", function(e) {
-		if (!synth_on) {
+		if (!timer_done) {
+			if (!timer_started) {
+				//Add orientation listener
+				window.addEventListener("deviceorientation", handle_orientation, true);
+
+
+				//timer!
+				timer_started = true;
+				var interval = 100;;
+				var count = 5;
+				var counter = setInterval(timer, interval);
+				function timer() {
+					if (count <= 0.1) {
+						clearInterval(counter);
+						timer_done = true;
+						synth.pause();
+						console.log("TIMER DONE");
+						console.log(note_arr);
+						return;
+					}
+					else {
+						count -= 0.1;
+						$("#timer").html("Time left: " + count.toFixed(1));
+						console.log(count.toFixed(1));
+					}
+				}
+			}
 			//...This is how you create in timbre p2
 			if (typeof synth == "undefined") {
 				/*
@@ -29,7 +55,7 @@
 				env = T("adsr", {a:500, d:500, s:1, r:800});
 				synth = T("OscGen", {osc:osc, env:env, mul:0.8, freq:880}).play();
 				*/
-				synth = T("osc", {wave:"pulse", freq:midi_to_hz(mvmt), mul:1});
+				synth = T("osc", {wave:"sin", freq:midi_to_hz(mvmt), mul:1});
 				synth.play();
 				console.log("built the synth");
 			}
@@ -42,44 +68,35 @@
 			synth.freq.value = midi_to_hz(midi_pitch+12);
 			note_arr.push(midi_pitch);
 			//console.log(note_arr);
-			//synth_on = true;
+			//timer_done = true;
 			console.log(synth);
 
 			/*T("timeout", {timeout:1000}).on("ended", function() {
 				console.log("timeout done");
 			}).start();*/
 
-			var interval = 100;;
-			var count = 5;
-			var counter = setInterval(timer, interval);
-			function timer() {
-				if (count <= 0) {
-					clearInterval(counter);
-					synth_on = true;
-					synth.pause();
-					console.log("TIMER DONE");
-					console.log(note_arr);
-					return;
-				}
-				count -= 0.1;
-				console.log(count.toFixed(1));
-			}
+
 		}
 		else {
 			/*synth.pause();
 			//synth.allNoteOff();
 			display_io.css("background-color", "black");
-			synth_on = false;*/
+			timer_done = false;*/
 		}
-		console.log(synth_on);
+		console.log(timer_done);
 		e.stopPropagation();
 		e.preventDefault();
 	});
 
 	$("#io").bind("mouseup", function(e) {
 			display_io.css("background-color", "black");
-			synth.freq.value = midi_to_hz(vex_to_midi(calculate_pitch(mvmt)));
-			engraveNew(calculate_pitch(mvmt), g_ctx, "C3");
+			if (!timer_done) {
+				synth.freq.value = midi_to_hz(vex_to_midi(calculate_pitch(mvmt)));
+				engraveNew(calculate_pitch(mvmt), g_ctx, "C3");
+			}
+			else {
+				synth.pause();
+			}
 
 	});
 
@@ -110,7 +127,7 @@
 		//console.log(g_ctx);
 		//console.log("cleared");
 		//engrave_new(calculate_pitch(mvmt), g_ctx, "C3");
-		//if (synth_on) {
+		//if (timer_done) {
 			display_io.css("background-color", calculate_color(mvmt));
 		//}
 	}
