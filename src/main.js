@@ -49,6 +49,12 @@
 		str = "mvmt: " + mvmt.toFixed(2);
 		display_meter.html(str);
 		console.log(str);
+
+		clear_stave();
+		//console.log(g_ctx);
+		console.log("cleared");
+		//engrave_new(calculate_pitch(mvmt), g_ctx, "C4");
+		engraveNew(calculate_pitch(mvmt), g_ctx, "C4");
 	}
 
 	//Here we say fuck the sharps/accidentals because they prob won't be helpful in-game anyways
@@ -63,7 +69,7 @@
 	/**ENGRAVING**/
 	//from tuner
 	//realtime update is done by Tuner()
-	const NOTEMAX=20;
+	const NOTEMAX=1; //1 just shows 1, 20 shows 20 at a time
 
 	//stave
 	var cv = $('.engraving canvas')[0];
@@ -122,6 +128,19 @@
 		voice.draw(c, stave);
 	}
 
+	function engrave_new(key) {
+		clear_stave();
+		var notes = [new Vex.Flow.StaveNote({keys:[key], duration:"q"})];
+		var voice = new Vex.Flow.Voice({
+		    num_beats: 4,
+		    beat_value: 4,
+		    resolution: Vex.Flow.RESOLUTION
+		 });
+		voice.addTickables(notes);
+		//var formatter = new Vex.Flow.Formatter().joinVoices([voice]).format([voice], 800);
+		voice.draw(g_ctx, stave);
+	}
+
 	/*function clear(pitches, engraves) {
 		pitches = [];
 		engraves = [];
@@ -131,10 +150,10 @@
 	/*
 	engraveNew("c#/4",g_ctx,"C0#");
 	engraveNew("c#/4",g_ctx,"C0#");
-	clear_staff();
+	clear_stave();
 	*/
 	
-	function clear_staff() {
+	function clear_stave() {
 		g_ctx.clear();
 		stave = new Vex.Flow.Stave(10, 0, 800);
 		stave.addClef("treble").setContext(g_ctx).draw();
