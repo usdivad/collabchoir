@@ -24,9 +24,9 @@
 				console.log("built the synth");
 			}
 			//synth.play();
-			synth.noteOn(mvmt, 100);
-			display_io.css("background-color", calculate_color(mvmt));
-			console.log(calculate_color(mvmt));
+			synth.noteOn(vex_to_midi(calculate_pitch(mvmt)), 100);
+			display_io.css("background-color", calculate_pitch(mvmt));
+			console.log(calculate_pitch(mvmt));
 			synth_on = true;
 			console.log(synth);
 		}
@@ -48,11 +48,11 @@
 		mvmt = (event.gamma + size + leftmost) * 100/size; //global mvmt, scale to 100%
 		str = "mvmt: " + mvmt.toFixed(2);
 		display_meter.html(str);
-		console.log(str);
+		//console.log(str);
 
 		clear_stave();
 		//console.log(g_ctx);
-		console.log("cleared");
+		//console.log("cleared");
 		//engrave_new(calculate_pitch(mvmt), g_ctx, "C4");
 		engraveNew(calculate_pitch(mvmt), g_ctx, "C4");
 	}
@@ -60,10 +60,40 @@
 	//Here we say fuck the sharps/accidentals because they prob won't be helpful in-game anyways
 	//Percentage refers basically to a level along a scale, 0-100 (e.g. freq)
 	function calculate_pitch(percentage) {
-		var pitch_arr = ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4"];
+		var pitch_arr = ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5", "d/5", "e/5", "f/5", "g/5", "a/5", "b/5"];
 		var narrow_scale = 0.95;
 		var index = Math.floor((percentage/100) * narrow_scale*pitch_arr.length); //narrow it so we don't get pitch_arr.length if we do get 100
 		return pitch_arr[index];
+	}
+
+	//"c#/4" ==> "C#4"
+	function vex_to_midi(vex) {
+		var octave = vex.slice(vex.length-1, vex.length); "4"
+		var tv = vex.slice(0, vex.length-1); "c#/"
+		var note = tv.slice(0, tv.length-1); "c#"
+		var map = {
+			"c": 0,
+			"c#": 1,
+			"d": 2,
+			"d#": 3,
+			"e": 4,
+			"f": 5,
+			"f#": 6,
+			"g": 7,
+			"g#": 8,
+			"a": 9,
+			"a#": 10,
+			"b": 11
+		};
+		var midi_base = octave*12 + 12;
+		var midi_icing;
+		if (typeof map[note] != "undefined") {
+			midi_icing = map[note];
+		}
+		else {
+			midi_icing = 0;
+		}
+		return midi_base+midi_icing;
 	}
 
 	/**ENGRAVING**/
