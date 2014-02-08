@@ -20,7 +20,7 @@
 
 	//LISTENERS
 	window.addEventListener("deviceorientation", handle_orientation, true);
-	$("#io").bind("touchstart", function(e) {
+	$("#io").bind("mousedown", function(e) {
 		if (!synth_on) {
 			//...This is how you create in timbre p2
 			if (typeof synth == "undefined") {
@@ -40,10 +40,30 @@
 			display_io.css("background-color", "blue");
 			var midi_pitch = vex_to_midi(calculate_pitch(mvmt));
 			synth.freq.value = midi_to_hz(midi_pitch+12);
-			note_arr.push(midi_pitch));
-			console.log(note_arr);
+			note_arr.push(midi_pitch);
+			//console.log(note_arr);
 			//synth_on = true;
 			console.log(synth);
+
+			/*T("timeout", {timeout:1000}).on("ended", function() {
+				console.log("timeout done");
+			}).start();*/
+
+			var interval = 100;;
+			var count = 5;
+			var counter = setInterval(timer, interval);
+			function timer() {
+				if (count <= 0) {
+					clearInterval(counter);
+					synth_on = true;
+					synth.pause();
+					console.log("TIMER DONE");
+					console.log(note_arr);
+					return;
+				}
+				count -= 0.1;
+				console.log(count.toFixed(1));
+			}
 		}
 		else {
 			/*synth.pause();
@@ -56,7 +76,7 @@
 		e.preventDefault();
 	});
 
-	$("#io").bind("touchend", function(e) {
+	$("#io").bind("mouseup", function(e) {
 			display_io.css("background-color", "black");
 			synth.freq.value = midi_to_hz(vex_to_midi(calculate_pitch(mvmt)));
 			engraveNew(calculate_pitch(mvmt), g_ctx, "C3");
