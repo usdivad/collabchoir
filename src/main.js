@@ -11,14 +11,16 @@
 	var display_meter = $("#meter");
 	var display_io = $("#io");
 	var synth_on = false;
+	var prev_mvmt = 60;
+	var note_arr = [];
 
 	//numbers
 	var gamma_min = 0;
 	var gamma_max = 100;
 
-	//Listeners
+	//LISTENERS
 	window.addEventListener("deviceorientation", handle_orientation, true);
-	$("#io").click(function() {
+	$("#io").bind("touchstart", function(e) {
 		if (!synth_on) {
 			//...This is how you create in timbre p2
 			if (typeof synth == "undefined") {
@@ -33,17 +35,30 @@
 			}
 			synth.play();
 			//synth.noteOn(vex_to_midi(calculate_pitch(mvmt)), 100);
-			console.log(calculate_pitch(mvmt));
-			synth_on = true;
+			//console.log(calculate_pitch(mvmt));
+
+			display_io.css("background-color", "blue");
+			synth.freq.value = midi_to_hz(vex_to_midi(calculate_pitch(mvmt))+12);
+			console.log(notes);
+			//synth_on = true;
 			console.log(synth);
 		}
 		else {
-			synth.pause();
+			/*synth.pause();
 			//synth.allNoteOff();
 			display_io.css("background-color", "black");
-			synth_on = false;
+			synth_on = false;*/
 		}
 		console.log(synth_on);
+		e.stopPropagation();
+		e.preventDefault();
+	});
+
+	$("#io").bind("touchend", function(e) {
+			display_io.css("background-color", "black");
+			synth.freq.value = midi_to_hz(vex_to_midi(calculate_pitch(mvmt)));
+			engraveNew(calculate_pitch(mvmt), g_ctx, "C3");
+
 	});
 
 	function handle_orientation(event) {
@@ -52,6 +67,7 @@
 		var leftmost = -90; //essentially a subtraction
 		var str = "";
 
+		prev_mvmt = mvmt;
 		mvmt = (event.gamma + size + leftmost) * 100/size; //global mvmt, scale to 100%
 		str = "mvmt: " + mvmt.toFixed(2);
 		display_meter.html(str);
@@ -64,17 +80,21 @@
 			mvmt = 0;
 		}
 
-		synth.freq.value = midi_to_hz(vex_to_midi(calculate_pitch(mvmt)));
+		if (calculate_pitch(mvmt) != calculate_pitch(prev_mvmt)) {
+			synth.freq.value = midi_to_hz(vex_to_midi(calculate_pitch(mvmt)));
+		}
 
-		clear_stave();
+		//clear_stave();
 		//console.log(g_ctx);
 		//console.log("cleared");
-		//engrave_new(calculate_pitch(mvmt), g_ctx, "C4");
-		engraveNew(calculate_pitch(mvmt), g_ctx, "C4");
-		if (synth_on) {
+		//engrave_new(calculate_pitch(mvmt), g_ctx, "C3");
+		//if (synth_on) {
 			display_io.css("background-color", calculate_color(mvmt));
-		}
+		//}
 	}
+
+
+	//PARSING, CALCULATING DATA
 
 	function calculate_color(mvmt) {
 		var s = "rgb(0,";
@@ -86,16 +106,16 @@
 	//Here we say fuck the sharps/accidentals because they prob won't be helpful in-game anyways
 	//Percentage refers basically to a level along a scale, 0-100 (e.g. freq)
 	function calculate_pitch(percentage) {
-		var pitch_arr = ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5", "d/5", "e/5", "f/5", "g/5", "a/5", "b/5"];
+		var pitch_arr = ["c/3", "d/3", "e/3", "f/3", "g/3", "a/3", "b/3", "c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4"];
 		var narrow_scale = 0.95;
 		var index = Math.floor((percentage/100) * narrow_scale*pitch_arr.length); //narrow it so we don't get pitch_arr.length if we do get 100
 		return pitch_arr[index];
 	}
 
-	//"c#/4" ==> "C#4"
+	//"c#/3" ==> "C#3" ==> 61 (we output the number itself)
 	function vex_to_midi(vex) {
 		console.log(vex);
-		var octave = vex.slice(vex.length-1, vex.length); "4"
+		var octave = vex.slice(vex.length-1, vex.length); "3"
 		var tv = vex.slice(0, vex.length-1); "c#/"
 		var note = tv.slice(0, tv.length-1); "c#"
 		var map = {
@@ -103,7 +123,7 @@
 			"c#": 1,
 			"d": 2,
 			"d#": 3,
-			"e": 4,
+			"e": 3,
 			"f": 5,
 			"f#": 6,
 			"g": 7,
@@ -125,10 +145,19 @@
 		return midi_final;
 	}
 
+
+	//converts midi to hz
+	/**TRANSPOSES IT!!!! for volume purposes for the devfest demo**/
+	function midi_to_hz(midi)
+	{
+		var freq = (330 / 32) * (Math.pow(2,((midi+12 - 9) / 12)));
+		return freq;
+	}
+
 	/**ENGRAVING**/
 	//from tuner
 	//realtime update is done by Tuner()
-	const NOTEMAX=1; //1 just shows 1, 20 shows 20 at a time
+	const NOTEMAX=5; //1 just shows 1, 20 shows 20 at a time
 
 	//stave
 	var cv = $('.engraving canvas')[0];
@@ -173,8 +202,8 @@
 		
 		//voice creation
 		var voice = new Vex.Flow.Voice({
-		num_beats: 4,
-		beat_value: 4,
+		num_beats: 3,
+		beat_value: 3,
 		resolution: Vex.Flow.RESOLUTION
 		});
 		voice.setStrict(false);
@@ -187,12 +216,13 @@
 		voice.draw(c, stave);
 	}
 
+	//Not working yet
 	function engrave_new(key) {
 		clear_stave();
 		var notes = [new Vex.Flow.StaveNote({keys:[key], duration:"q"})];
 		var voice = new Vex.Flow.Voice({
-		    num_beats: 4,
-		    beat_value: 4,
+		    num_beats: 3,
+		    beat_value: 3,
 		    resolution: Vex.Flow.RESOLUTION
 		 });
 		voice.addTickables(notes);
@@ -207,8 +237,8 @@
 	} */
 
 	/*
-	engraveNew("c#/4",g_ctx,"C0#");
-	engraveNew("c#/4",g_ctx,"C0#");
+	engraveNew("c#/3",g_ctx,"C0#");
+	engraveNew("c#/3",g_ctx,"C0#");
 	clear_stave();
 	*/
 	
@@ -218,13 +248,9 @@
 		stave.addClef("treble").setContext(g_ctx).draw();
 	}
 
-	//converts midi to hz
-	/**TRANSPOSES IT!!!! for volume purposes for the devfest demo**/
-	function midi_to_hz(midi)
-	{
-		var freq = (440 / 32) * (Math.pow(2,((midi+12 - 9) / 12)));
-		return freq;
-	}
+	//GAME BRAIN
+	//melody is tied to the local pitch_arr (not so cool)
+	var melody = [];
 
 
 })();
