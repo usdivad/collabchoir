@@ -21,21 +21,25 @@
 	$("#io").click(function() {
 		if (!synth_on) {
 			//...This is how you create in timbre p2
-			if (typeof osc == "undefined") {
+			if (typeof synth == "undefined") {
+				/*
 				osc = T("square");
 				env = T("adsr", {a:500, d:500, s:1, r:800});
 				synth = T("OscGen", {osc:osc, env:env, mul:0.8, freq:880}).play();
+				*/
+				synth = T("osc", {wave:"sin", freq:midi_to_hz(mvmt), mul:1});
+				synth.play();
 				console.log("built the synth");
 			}
-			//synth.play();
-			synth.noteOn(vex_to_midi(calculate_pitch(mvmt)), 100);
+			synth.play();
+			//synth.noteOn(vex_to_midi(calculate_pitch(mvmt)), 100);
 			console.log(calculate_pitch(mvmt));
 			synth_on = true;
 			console.log(synth);
 		}
 		else {
-			//synth.pause();
-			synth.allNoteOff();
+			synth.pause();
+			//synth.allNoteOff();
 			display_io.css("background-color", "black");
 			synth_on = false;
 		}
@@ -60,12 +64,16 @@
 			mvmt = 0;
 		}
 
+		synth.freq.value = midi_to_hz(vex_to_midi(calculate_pitch(mvmt)));
+
 		clear_stave();
 		//console.log(g_ctx);
 		//console.log("cleared");
 		//engrave_new(calculate_pitch(mvmt), g_ctx, "C4");
 		engraveNew(calculate_pitch(mvmt), g_ctx, "C4");
-		display_io.css("background-color", calculate_color(mvmt));
+		if (synth_on) {
+			display_io.css("background-color", calculate_color(mvmt));
+		}
 	}
 
 	function calculate_color(mvmt) {
@@ -113,7 +121,7 @@
 			midi_icing = 0;
 		}
 		var midi_final = midi_base+midi_icing;
-		console.log("MIDI: " + midi_base + "+" + midi_icing + " = " + midi_final);
+		//console.log("MIDI: " + midi_base + "+" + midi_icing + " = " + midi_final);
 		return midi_final;
 	}
 
@@ -208,6 +216,14 @@
 		g_ctx.clear();
 		stave = new Vex.Flow.Stave(10, 0, 800);
 		stave.addClef("treble").setContext(g_ctx).draw();
+	}
+
+	//converts midi to hz
+	/**TRANSPOSES IT!!!! for volume purposes for the devfest demo**/
+	function midi_to_hz(midi)
+	{
+		var freq = (440 / 32) * (Math.pow(2,((midi+12 - 9) / 12)));
+		return freq;
 	}
 
 
