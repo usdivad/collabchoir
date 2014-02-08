@@ -29,7 +29,7 @@
 				env = T("adsr", {a:500, d:500, s:1, r:800});
 				synth = T("OscGen", {osc:osc, env:env, mul:0.8, freq:880}).play();
 				*/
-				synth = T("osc", {wave:"sin", freq:midi_to_hz(mvmt), mul:1});
+				synth = T("osc", {wave:"pulse", freq:midi_to_hz(mvmt), mul:1});
 				synth.play();
 				console.log("built the synth");
 			}
@@ -38,8 +38,10 @@
 			//console.log(calculate_pitch(mvmt));
 
 			display_io.css("background-color", "blue");
-			synth.freq.value = midi_to_hz(vex_to_midi(calculate_pitch(mvmt))+12);
-			console.log(notes);
+			var midi_pitch = vex_to_midi(calculate_pitch(mvmt));
+			synth.freq.value = midi_to_hz(midi_pitch+12);
+			note_arr.push(midi_pitch));
+			console.log(note_arr);
 			//synth_on = true;
 			console.log(synth);
 		}
