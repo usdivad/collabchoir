@@ -1,8 +1,9 @@
 //Main sheet
 (function() {
+	//This is how you create in timbre p1...
 	var osc;
 	var env;
-	var synth
+	var synth;
 	//var synth = T("osc", {wave:"pulse", freq:880, mul:0.8});
 	console.log(synth);
 	console.log("ehy");
@@ -15,6 +16,7 @@
 	window.addEventListener("deviceorientation", handle_orientation, true);
 	$("#io").click(function() {
 		if (!synth_on) {
+			//...This is how you create in timbre p2
 			if (typeof osc == "undefined") {
 				osc = T("square");
 				env = T("adsr", {a:500, d:500, s:1, r:800});
@@ -38,21 +40,25 @@
 	});
 
 	function handle_orientation(event) {
-		mvmt = (event.gamma + 90) * 100/180; //scale to 100%
-		display_meter.html("mvmt: " + mvmt.toFixed(2));
-		//console.log("a");
-	};
+		//mvmt = event.gamma; //global mvmt
+		var size = 180;
+		var leftmost = -90; //essentially a subtraction
+		var str = "";
 
-	function calculate_color(mvmt) {
-		var s = "rgb(0,";
-		s += Math.floor((mvmt/100) * 255);
-		s += ",0)";
-		return s;
-	};
+		mvmt = (event.gamma + size + leftmost) * 100/size; //global mvmt, scale to 100%
+		str = "mvmt: " + mvmt.toFixed(2);
+		display_meter.html(str);
+		console.log(str);
+	}
 
-	//Parsing parameter
-	//function
-
+	//Here we say fuck the sharps/accidentals because they prob won't be helpful in-game anyways
+	//Percentage refers basically to a level along a scale, 0-100 (e.g. freq)
+	function calculate_pitch(percentage) {
+		var pitch_arr = ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4"];
+		var narrow_scale = 0.95;
+		var index = Math.floor((percentage/100) * narrow_scale*pitch_arr.length); //narrow it so we don't get pitch_arr.length if we do get 100
+		return pitch_arr[index];
+	}
 
 	/**ENGRAVING**/
 	//from tuner
@@ -72,7 +78,7 @@
 	//engrave
 	var DURATION = "q";
 
-	//in format ("c/5", g_ctx, "C0#")
+	//In format ("c/5", g_ctx, "C0#")
 	function engraveNew(k, c, p) {
 		//add new note
 		//var new_note = new Vex.Flow.StaveNote();
@@ -116,13 +122,23 @@
 		voice.draw(c, stave);
 	}
 
-	function clear(pitches, engraves) {
+	/*function clear(pitches, engraves) {
 		pitches = [];
 		engraves = [];
 		console.log("yes, clear!");
-	} 
+	} */
 
+	/*
 	engraveNew("c#/4",g_ctx,"C0#");
+	engraveNew("c#/4",g_ctx,"C0#");
+	clear_staff();
+	*/
+	
+	function clear_staff() {
+		g_ctx.clear();
+		stave = new Vex.Flow.Stave(10, 0, 800);
+		stave.addClef("treble").setContext(g_ctx).draw();
+	}
 
 
 })();
