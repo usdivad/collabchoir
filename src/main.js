@@ -20,19 +20,21 @@
 	var gamma_max = 100;
 
 	//LISTENERS
+	//Touching the "Capture" button
 	$("#io").bind("mousedown", function(e) {
 		if (!timer_done) {
-			if (!timer_started) {
+			if (!timer_started) { //initiate the timer etc.
 				//Add orientation listener
 				window.addEventListener("deviceorientation", handle_orientation, true);
 
 
 				//timer!
 				timer_started = true;
-				var interval = 100;;
-				var count = 8; //#s
+				var interval = 100;
+				var count = 8; //# of seconds the timer runs for
 				var counter = setInterval(timer, interval);
 				function timer() {
+					//The timer is done:
 					if (count <= 0.1) {
 						clearInterval(counter);
 						timer_done = true;
@@ -41,6 +43,7 @@
 						console.log(note_arr);
 						return;
 					}
+					//Timer is still going
 					else {
 						count -= 0.1;
 						$("#timer").html("Time left: " + count.toFixed(1));
@@ -48,14 +51,16 @@
 					}
 				}
 			}
+
 			//...This is how you create in timbre p2
+			//correlated with the timer but good to have separate checks
 			if (typeof synth == "undefined") {
 				/*
 				osc = T("square");
 				env = T("adsr", {a:500, d:500, s:1, r:800});
 				synth = T("OscGen", {osc:osc, env:env, mul:0.8, freq:880}).play();
 				*/
-				synth = T("osc", {wave:"sin", freq:midi_to_hz(mvmt), mul:1});
+				synth = T("osc", {wave:"pulse", freq:midi_to_hz(mvmt), mul:1});
 				synth.play();
 				console.log("built the synth");
 			}
@@ -63,9 +68,10 @@
 			//synth.noteOn(vex_to_midi(calculate_pitch(mvmt)), 100);
 			//console.log(calculate_pitch(mvmt));
 
-			display_io.css("background-color", "blue");
+			//touch
+			display_io.css("background-color", "black");
 			var midi_pitch = vex_to_midi(calculate_pitch(mvmt));
-			synth.freq.value = midi_to_hz(midi_pitch+12);
+			synth.freq.value = midi_to_hz(midi_pitch+12); //octave indicates touch too
 			if (note_arr.length < NOTEMAX) {
 				note_arr.push(midi_pitch);
 			}
@@ -90,30 +96,34 @@
 		e.preventDefault();
 	});
 
+	//On release
 	$("#io").bind("mouseup", function(e) {
 			display_io.css("background-color", "black");
 			if (!timer_done) {
-				synth.freq.value = midi_to_hz(vex_to_midi(calculate_pitch(mvmt)));
-				engraveNew(calculate_pitch(mvmt), g_ctx, "C3");
+				synth.freq.value = midi_to_hz(vex_to_midi(calculate_pitch(mvmt))); //back to normal
+				engraveNew(calculate_pitch(mvmt), g_ctx, "C3"); //engrave on user input stave
 			}
-			else {
+			else { //timer is done
 				synth.pause();
 			}
 
 	});
 
+	//Function called when orientation change is detected
 	function handle_orientation(event) {
 		//mvmt = event.gamma; //global mvmt
 		var size = 180;
 		var leftmost = -90; //essentially a subtraction
 		var str = "";
 
+		//Get gamma value
 		prev_mvmt = mvmt;
 		mvmt = (event.gamma + size + leftmost) * 100/size; //global mvmt, scale to 100%
 		str = "mvmt: " + mvmt.toFixed(2);
 		display_meter.html(str);
 		//console.log(str);
 
+		//Setting max/min thresholds
 		if (mvmt > 100) {
 			mvmt = 100;
 		}
@@ -121,6 +131,7 @@
 			mvmt = 0;
 		}
 
+		//Prevent repeats (dubious)
 		if (calculate_pitch(mvmt) != calculate_pitch(prev_mvmt)) {
 			synth.freq.value = midi_to_hz(vex_to_midi(calculate_pitch(mvmt)));
 		}
@@ -130,6 +141,7 @@
 		//console.log("cleared");
 		//engrave_new(calculate_pitch(mvmt), g_ctx, "C3");
 		//if (timer_done) {
+			//Color transition
 			display_io.css("background-color", calculate_color(mvmt));
 		//}
 	}
@@ -137,6 +149,7 @@
 
 	//PARSING, CALCULATING DATA
 
+	//Calc color transition (blue green)
 	function calculate_color(mvmt) {
 		var green_value = Math.floor((mvmt/100) * 255);
 		var blue_value = 255-green_value;
@@ -174,7 +187,7 @@
 			"b": 11
 		};
 		var midi_base = octave*12 + 12;
-		var midi_icing;
+		var midi_icing; //how many notes above the base C
 		if (typeof map[note] != "undefined") {
 			midi_icing = map[note];
 		}
@@ -196,7 +209,7 @@
 	}
 
 	/**ENGRAVING**/
-	//Engrave given melody
+	//Engrave given melody; GAME BRAIN
 	var melody = ["a/3", "e/4", "c/4", "a/3", "d/4", "b/3", "g/3"];
 
 	var melo_cv = $(".given_melody canvas")[0];
@@ -224,7 +237,15 @@
 	melo_voice.draw(melo_ctx, melo_stave);
 
 
+	//GAME BRAIN evaluation
+	//given_arr in vex (a/4) format, user_arr in midi pitches already
+	function evaluate_score(given_arr, user_arr) {
+		var given_formatted = [];
+	}
 
+	//-------------
+
+	//ENGRAVING user input
 	//from tuner
 	//realtime update is done by Tuner()
 	const NOTEMAX=melo_notes.length; //1 just shows 1, 20 shows 20 at a time
@@ -306,7 +327,7 @@
 		    resolution: Vex.Flow.RESOLUTION
 		 });
 		voice.addTickables(notes);
-		//var formatter = new Vex.Flow.Formatter().joinVoices([voice]).format([voice], 800);
+		var formatter = new Vex.Flow.Formatter().joinVoices([voice]).format([voice], 500);
 		voice.draw(g_ctx, stave);
 	}
 
@@ -327,10 +348,6 @@
 		stave = new Vex.Flow.Stave(10, 0, 800);
 		stave.addClef("treble").setContext(g_ctx).draw();
 	}
-
-	//GAME BRAIN
-	//melody is tied to the local pitch_arr (not so cool)
-	var melody = [];
 
 	window.scroll(0,1);
 })();
