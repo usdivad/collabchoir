@@ -12,6 +12,10 @@
 	var display_io = $("#io");
 	var synth_on = false;
 
+	//numbers
+	var gamma_min = 0;
+	var gamma_max = 100;
+
 	//Listeners
 	window.addEventListener("deviceorientation", handle_orientation, true);
 	$("#io").click(function() {
@@ -25,7 +29,6 @@
 			}
 			//synth.play();
 			synth.noteOn(vex_to_midi(calculate_pitch(mvmt)), 100);
-			display_io.css("background-color", calculate_pitch(mvmt));
 			console.log(calculate_pitch(mvmt));
 			synth_on = true;
 			console.log(synth);
@@ -50,11 +53,26 @@
 		display_meter.html(str);
 		//console.log(str);
 
+		if (mvmt > 100) {
+			mvmt = 100;
+		}
+		if (mvmt < 0) {
+			mvmt = 0;
+		}
+
 		clear_stave();
 		//console.log(g_ctx);
 		//console.log("cleared");
 		//engrave_new(calculate_pitch(mvmt), g_ctx, "C4");
 		engraveNew(calculate_pitch(mvmt), g_ctx, "C4");
+		display_io.css("background-color", calculate_color(mvmt));
+	}
+
+	function calculate_color(mvmt) {
+		var s = "rgb(0,";
+		s += Math.floor((mvmt/100) * 255);
+		s += ",0)";
+		return s;
 	}
 
 	//Here we say fuck the sharps/accidentals because they prob won't be helpful in-game anyways
@@ -68,6 +86,7 @@
 
 	//"c#/4" ==> "C#4"
 	function vex_to_midi(vex) {
+		console.log(vex);
 		var octave = vex.slice(vex.length-1, vex.length); "4"
 		var tv = vex.slice(0, vex.length-1); "c#/"
 		var note = tv.slice(0, tv.length-1); "c#"
@@ -93,7 +112,9 @@
 		else {
 			midi_icing = 0;
 		}
-		return midi_base+midi_icing;
+		var midi_final = midi_base+midi_icing;
+		console.log("MIDI: " + midi_base + "+" + midi_icing + " = " + midi_final);
+		return midi_icing;
 	}
 
 	/**ENGRAVING**/
