@@ -1,21 +1,37 @@
 <html>
 	<style>
 		#io, #base {
-			width: 256px;
-			height: 256px;
+			width: 500px;
+			height: 40px;
 			background-color: black;
-			float:left;
+			/*float:left;*/
 			margin-right: 24px;
+			color: white;
+			font-size: 200%;
+			text-align: center;
+			padding-top: 100px;
+			padding-bottom: 100px;
+			margin-bottom: 10px;
 		}
 		#meter {
 			float: bottom;
 		}
+		body {
+			width: 500px;
+			margin: 0 auto;
+		}
 	</style>
 	<body>
-		<div id="io"></div>
+		<div id="timer">X.X</div>
+		<div id="io">CAPTURE</div>
 		<!--<div id="base"></div>-->
+		Given melody:
+		<div class="given_melody">
+			<canvas width="500" height="175"></canvas>
+		</div>
+		Your attempt:
 		<div class="engraving">
-			<canvas width="500" height="500"></canvas>
+			<canvas width="500" height="175"></canvas>
 		</div>
 		<div id="meter"></div>
 		<script src="lib/jquery-1.10.2.min.js"></script>

@@ -30,7 +30,7 @@
 				//timer!
 				timer_started = true;
 				var interval = 100;;
-				var count = 10; //#s
+				var count = 8; //#s
 				var counter = setInterval(timer, interval);
 				function timer() {
 					if (count <= 0.1) {
@@ -66,7 +66,9 @@
 			display_io.css("background-color", "blue");
 			var midi_pitch = vex_to_midi(calculate_pitch(mvmt));
 			synth.freq.value = midi_to_hz(midi_pitch+12);
-			note_arr.push(midi_pitch);
+			if (note_arr.length < NOTEMAX) {
+				note_arr.push(midi_pitch);
+			}
 			//console.log(note_arr);
 			//timer_done = true;
 			console.log(synth);
@@ -136,9 +138,9 @@
 	//PARSING, CALCULATING DATA
 
 	function calculate_color(mvmt) {
-		var s = "rgb(0,";
-		s += Math.floor((mvmt/100) * 255);
-		s += ",0)";
+		var green_value = Math.floor((mvmt/100) * 255);
+		var blue_value = 255-green_value;
+		var s = "rgb(0," + green_value + "," + blue_value + ")";
 		return s;
 	}
 
@@ -195,7 +197,7 @@
 
 	/**ENGRAVING**/
 	//Engrave given melody
-	var melody = ["a/3", "e/4", "c/4", "a/3"];
+	var melody = ["a/3", "e/4", "c/4", "a/3", "d/4", "b/3", "g/3"];
 
 	var melo_cv = $(".given_melody canvas")[0];
 	var melo_renderer = new Vex.Flow.Renderer(melo_cv, Vex.Flow.Renderer.Backends.CANVAS);
@@ -225,7 +227,7 @@
 
 	//from tuner
 	//realtime update is done by Tuner()
-	const NOTEMAX=5; //1 just shows 1, 20 shows 20 at a time
+	const NOTEMAX=melo_notes.length; //1 just shows 1, 20 shows 20 at a time
 
 	//stave
 	var cv = $('.engraving canvas')[0];
@@ -262,11 +264,21 @@
 		
 		//reset staff (justifying won't work and it'll disappear otherwise)
 		if (notes.length > NOTEMAX) {
-			var n = notes[NOTEMAX];
-			notes = [n];
+			//var n = notes[NOTEMAX];
+			//notes = [n];
+
+			//stop collecting
+			/*clearInterval(counter);
+			timer_done = true;
+			synth.pause();
+			console.log("TIMER DONE");
+			console.log(note_arr);
+			return;*/
 		}
-		//add notes to array
-		notes.push(new_note);
+		else {
+			//add notes to array
+			notes.push(new_note);
+		}
 		
 		//voice creation
 		var voice = new Vex.Flow.Voice({
