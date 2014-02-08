@@ -114,7 +114,7 @@
 		}
 		var midi_final = midi_base+midi_icing;
 		console.log("MIDI: " + midi_base + "+" + midi_icing + " = " + midi_final);
-		return midi_icing;
+		return midi_final;
 	}
 
 	/**ENGRAVING**/
