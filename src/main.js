@@ -1,10 +1,11 @@
 //Main sheet
 (function() {
-	var osc = T("square");
-	var env = T("adsr", {a:500, d:500, s:1, r:800});
+	var osc;
+	var env;
+	var synth
 	//var synth = T("osc", {wave:"pulse", freq:880, mul:0.8});
-	var synth = T("OscGen", {osc:osc, env:env, mul:0.8, freq:880}).play();
 	console.log(synth);
+	console.log("ehy");
 	var mvmt = 60;
 	var display_meter = $("#meter");
 	var display_io = $("#io");
@@ -14,6 +15,12 @@
 	window.addEventListener("deviceorientation", handle_orientation, true);
 	$("#io").click(function() {
 		if (!synth_on) {
+			if (typeof osc == "undefined") {
+				osc = T("square");
+				env = T("adsr", {a:500, d:500, s:1, r:800});
+				synth = T("OscGen", {osc:osc, env:env, mul:0.8, freq:880}).play();
+				console.log("built the synth");
+			}
 			//synth.play();
 			synth.noteOn(mvmt, 100);
 			display_io.css("background-color", calculate_color(mvmt));
