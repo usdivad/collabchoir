@@ -332,5 +332,5 @@
 	//melody is tied to the local pitch_arr (not so cool)
 	var melody = [];
 
-
+	window.scroll(0,1);
 })();
